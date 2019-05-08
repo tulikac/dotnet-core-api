@@ -12,15 +12,7 @@ steps:
   displayName: "NuGet use 4.6.2"
   inputs:
     versionSpec: 4.6.2
-
-# Restore NuGet packages
-
-- task: NuGetCommand@2
-  displayName: "NuGet Restore"
-  inputs:
-    restoreSolution: '**/*.csproj'
-    feedsToUse: config
-    nugetConfigPath: NuGet.config # you should always have a NuGet.config file!
+- script: dotnet restore
 
 # Build your .NET Core project (but avoid restore your packages again)
 
@@ -29,14 +21,6 @@ steps:
   inputs:
     projects: '**/*.csproj'
     arguments: --configuration $(BuildConfiguration) --no-restore
-
-# Run your unit tests
-
-- task: DotNetCoreCLI@2
-  displayName: ".NET test"
-  inputs:
-    command: test
-    projects: 'test\**.csproj'
 
 # Create the deployment package for your web project
 
