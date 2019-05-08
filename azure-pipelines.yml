@@ -1,24 +1,53 @@
-# ASP.NET Core
-# Build and test ASP.NET Core projects targeting .NET Core.
-# Add steps that run tests, create a NuGet package, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+ueue:
+  name: Hosted 2017
 
-trigger:
-- master
-
-pool:
-  vmImage: 'ubuntu-latest'
-
-  # do this before all your .NET Core tasks
 steps:
-- task: DotNetCoreInstaller@0
+
+# Download the latest recommended NuGet exe
+
+- task: NuGetToolInstaller@0
+  displayName: "NuGet use 4.6.2"
   inputs:
-    version: '2.1.300' # replace this value with the version that you need for your project
-- script: dotnet restore
+    versionSpec: 4.6.2
+
+# Restore NuGet packages
+
+- task: NuGetCommand@2
+  displayName: "NuGet Restore"
+  inputs:
+    restoreSolution: '**/*.csproj'
+    feedsToUse: config
+    nugetConfigPath: NuGet.config # you should always have a NuGet.config file!
+
+# Build your .NET Core project (but avoid restore your packages again)
 
 - task: DotNetCoreCLI@2
-  displayName: Build
+  displayName: ".NET build"
   inputs:
-    command: build
     projects: '**/*.csproj'
-    arguments: '--configuration Release' # Update this to match your need
+    arguments: --configuration $(BuildConfiguration) --no-restore
+
+# Run your unit tests
+
+- task: DotNetCoreCLI@2
+  displayName: ".NET test"
+  inputs:
+    command: test
+    projects: 'test\**.csproj'
+
+# Create the deployment package for your web project
+
+- task: DotNetCoreCLI@2
+  displayName: ".NET publish package"
+  inputs:
+    command: publish
+    arguments: '--configuration $(BuildConfiguration) --no-restore --output $(Build.ArtifactStagingDirectory)/app/pkg'
+
+# Publish your web project deployment packages as named artifact 'app'
+
+- task: PublishBuildArtifacts@1
+  displayName: "Publish artifacts"
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/app'
+    ArtifactName: app
+    publishLocation: Container
