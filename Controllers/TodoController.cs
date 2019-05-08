@@ -46,6 +46,17 @@ namespace TodoApi.Controllers
             return new ObjectResult(item);
         }
         #endregion
+
+        [HttpGet("{name}", Name = "GetTodoName")]
+        public IActionResult GetByName(string name)
+        {
+            var item = _context.TodoItems.FirstOrDefault(t => t.Name == name);
+            if (item == null)
+            {
+                return NotFound();
+            }
+            return new ObjectResult(item);
+        }
         #endregion
         #region snippet_Create
         [HttpPost]
